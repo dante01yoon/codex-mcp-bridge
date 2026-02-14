@@ -5,6 +5,9 @@ A local stdio MCP server that exposes two tools for Claude CLI and executes `cod
 - `consult_codex`
 - `consult_codex_with_stdin`
 
+Placeholder convention used in this README:
+- `<project-root>` = your local clone path for this repository (for example, `~/workspace/codex-mcp-bridge`).
+
 ## Features
 
 - Uses `codex exec -` (prompt via stdin) in non-interactive mode.
@@ -23,7 +26,7 @@ A local stdio MCP server that exposes two tools for Claude CLI and executes `cod
 ## Install
 
 ```bash
-cd /Users/dante/codex-mcp-bridge
+cd <project-root>
 uv venv
 source .venv/bin/activate
 uv pip install -e .[dev]
@@ -32,14 +35,14 @@ uv pip install -e .[dev]
 ## Run (stdio MCP)
 
 ```bash
-cd /Users/dante/codex-mcp-bridge
+cd <project-root>
 uv run codex-mcp-bridge
 ```
 
 ## Claude CLI registration example
 
 ```bash
-claude mcp add codex-bridge -- uv --directory /Users/dante/codex-mcp-bridge run codex-mcp-bridge
+claude mcp add codex-bridge -- uv --directory <project-root> run codex-mcp-bridge
 ```
 
 ## Default Launcher Command (Recommended)
@@ -47,16 +50,16 @@ claude mcp add codex-bridge -- uv --directory /Users/dante/codex-mcp-bridge run 
 Use this launcher to make Claude prefer `codex-bridge` automatically for coding tasks, without writing explicit templates each time.
 
 Launcher script:
-- `/Users/dante/codex-mcp-bridge/scripts/claude_codex_launcher.sh`
+- `<project-root>/scripts/claude_codex_launcher.sh`
 
 Run:
 ```bash
-/Users/dante/codex-mcp-bridge/scripts/claude_codex_launcher.sh
+<project-root>/scripts/claude_codex_launcher.sh
 ```
 
 Optional shell alias:
 ```bash
-alias claude-codex='/Users/dante/codex-mcp-bridge/scripts/claude_codex_launcher.sh'
+alias claude-codex='<project-root>/scripts/claude_codex_launcher.sh'
 ```
 
 Then use:
@@ -66,12 +69,12 @@ claude-codex
 
 Audit launcher (verifies whether Codex bridge tools were actually used):
 ```bash
-/Users/dante/codex-mcp-bridge/scripts/claude_codex_audit.sh "Return exactly BRIDGE_OK"
+<project-root>/scripts/claude_codex_audit.sh "Return exactly BRIDGE_OK"
 ```
 
 Optional audit alias:
 ```bash
-alias claude-codex-audit='/Users/dante/codex-mcp-bridge/scripts/claude_codex_audit.sh'
+alias claude-codex-audit='<project-root>/scripts/claude_codex_audit.sh'
 ```
 
 The audit launcher prints:
@@ -100,7 +103,7 @@ Korean quick note:
 
 1. Install dependencies and run the bridge server:
 ```bash
-cd /Users/dante/codex-mcp-bridge
+cd <project-root>
 uv venv
 source .venv/bin/activate
 uv pip install -e .[dev]
@@ -109,7 +112,7 @@ uv run codex-mcp-bridge
 
 2. Register MCP server in Claude CLI:
 ```bash
-claude mcp add codex-bridge -- uv --directory /Users/dante/codex-mcp-bridge run codex-mcp-bridge
+claude mcp add codex-bridge -- uv --directory <project-root> run codex-mcp-bridge
 ```
 
 3. Verify MCP connection:
@@ -119,13 +122,13 @@ claude mcp get codex-bridge
 
 4. Verify end-to-end tool calls through Claude:
 ```bash
-cd /Users/dante
-claude -p --output-format text --permission-mode dontAsk --allowedTools mcp__codex-bridge__consult_codex -- "Call mcp__codex-bridge__consult_codex with arguments {\"query\":\"Return exactly BRIDGE_OK\",\"directory\":\"/Users/dante/codex-mcp-bridge\",\"format\":\"text\",\"timeout\":180,\"sandbox\":\"read-only\"}. Return only the tool result."
+cd ~
+claude -p --output-format text --permission-mode dontAsk --allowedTools mcp__codex-bridge__consult_codex -- "Call mcp__codex-bridge__consult_codex with arguments {\"query\":\"Return exactly BRIDGE_OK\",\"directory\":\"<project-root>\",\"format\":\"text\",\"timeout\":180,\"sandbox\":\"read-only\"}. Return only the tool result."
 ```
 
 ```bash
-cd /Users/dante
-claude -p --output-format text --permission-mode dontAsk --allowedTools mcp__codex-bridge__consult_codex_with_stdin -- "Call mcp__codex-bridge__consult_codex_with_stdin with arguments {\"stdin_content\":\"ping\",\"prompt\":\"Return exactly PONG\",\"directory\":\"/Users/dante/codex-mcp-bridge\",\"format\":\"text\",\"timeout\":180,\"sandbox\":\"read-only\"}. Return only the tool result."
+cd ~
+claude -p --output-format text --permission-mode dontAsk --allowedTools mcp__codex-bridge__consult_codex_with_stdin -- "Call mcp__codex-bridge__consult_codex_with_stdin with arguments {\"stdin_content\":\"ping\",\"prompt\":\"Return exactly PONG\",\"directory\":\"<project-root>\",\"format\":\"text\",\"timeout\":180,\"sandbox\":\"read-only\"}. Return only the tool result."
 ```
 
 5. Troubleshooting:
@@ -138,7 +141,7 @@ claude -p --output-format text --permission-mode dontAsk --allowedTools mcp__cod
 
 1. 의존성 설치 및 브리지 서버 실행:
 ```bash
-cd /Users/dante/codex-mcp-bridge
+cd <project-root>
 uv venv
 source .venv/bin/activate
 uv pip install -e .[dev]
@@ -147,7 +150,7 @@ uv run codex-mcp-bridge
 
 2. Claude CLI에 MCP 서버 등록:
 ```bash
-claude mcp add codex-bridge -- uv --directory /Users/dante/codex-mcp-bridge run codex-mcp-bridge
+claude mcp add codex-bridge -- uv --directory <project-root> run codex-mcp-bridge
 ```
 
 3. MCP 연결 상태 확인:
@@ -157,13 +160,13 @@ claude mcp get codex-bridge
 
 4. Claude 경유 E2E 도구 호출 검증:
 ```bash
-cd /Users/dante
-claude -p --output-format text --permission-mode dontAsk --allowedTools mcp__codex-bridge__consult_codex -- "Call mcp__codex-bridge__consult_codex with arguments {\"query\":\"Return exactly BRIDGE_OK\",\"directory\":\"/Users/dante/codex-mcp-bridge\",\"format\":\"text\",\"timeout\":180,\"sandbox\":\"read-only\"}. Return only the tool result."
+cd ~
+claude -p --output-format text --permission-mode dontAsk --allowedTools mcp__codex-bridge__consult_codex -- "Call mcp__codex-bridge__consult_codex with arguments {\"query\":\"Return exactly BRIDGE_OK\",\"directory\":\"<project-root>\",\"format\":\"text\",\"timeout\":180,\"sandbox\":\"read-only\"}. Return only the tool result."
 ```
 
 ```bash
-cd /Users/dante
-claude -p --output-format text --permission-mode dontAsk --allowedTools mcp__codex-bridge__consult_codex_with_stdin -- "Call mcp__codex-bridge__consult_codex_with_stdin with arguments {\"stdin_content\":\"ping\",\"prompt\":\"Return exactly PONG\",\"directory\":\"/Users/dante/codex-mcp-bridge\",\"format\":\"text\",\"timeout\":180,\"sandbox\":\"read-only\"}. Return only the tool result."
+cd ~
+claude -p --output-format text --permission-mode dontAsk --allowedTools mcp__codex-bridge__consult_codex_with_stdin -- "Call mcp__codex-bridge__consult_codex_with_stdin with arguments {\"stdin_content\":\"ping\",\"prompt\":\"Return exactly PONG\",\"directory\":\"<project-root>\",\"format\":\"text\",\"timeout\":180,\"sandbox\":\"read-only\"}. Return only the tool result."
 ```
 
 5. 문제 해결:
@@ -179,56 +182,56 @@ Use these templates when you want Claude to invoke Codex via MCP first.
 ### Template A: Codex-first simple text result (EN)
 
 ```text
-Call mcp__codex-bridge__consult_codex with arguments {"query":"<YOUR_TASK>","directory":"/Users/dante/codex-mcp-bridge","format":"text","timeout":180,"sandbox":"read-only"}.
+Call mcp__codex-bridge__consult_codex with arguments {"query":"<YOUR_TASK>","directory":"<project-root>","format":"text","timeout":180,"sandbox":"read-only"}.
 Return only the tool result.
 ```
 
 Example:
 
 ```text
-Call mcp__codex-bridge__consult_codex with arguments {"query":"Return exactly BRIDGE_OK","directory":"/Users/dante/codex-mcp-bridge","format":"text","timeout":180,"sandbox":"read-only"}.
+Call mcp__codex-bridge__consult_codex with arguments {"query":"Return exactly BRIDGE_OK","directory":"<project-root>","format":"text","timeout":180,"sandbox":"read-only"}.
 Return only the tool result.
 ```
 
 ### 템플릿 A: Codex 우선 단순 텍스트 결과 (KR)
 
 ```text
-mcp__codex-bridge__consult_codex 도구를 다음 인자로 호출해줘: {"query":"<작업 지시문>","directory":"/Users/dante/codex-mcp-bridge","format":"text","timeout":180,"sandbox":"read-only"}.
+mcp__codex-bridge__consult_codex 도구를 다음 인자로 호출해줘: {"query":"<작업 지시문>","directory":"<project-root>","format":"text","timeout":180,"sandbox":"read-only"}.
 그리고 도구 결과만 그대로 반환해줘.
 ```
 
 예시:
 
 ```text
-mcp__codex-bridge__consult_codex 도구를 다음 인자로 호출해줘: {"query":"정확히 BRIDGE_OK만 반환해","directory":"/Users/dante/codex-mcp-bridge","format":"text","timeout":180,"sandbox":"read-only"}.
+mcp__codex-bridge__consult_codex 도구를 다음 인자로 호출해줘: {"query":"정확히 BRIDGE_OK만 반환해","directory":"<project-root>","format":"text","timeout":180,"sandbox":"read-only"}.
 그리고 도구 결과만 그대로 반환해줘.
 ```
 
 ### Template B: Structured JSON result (EN)
 
 ```text
-Call mcp__codex-bridge__consult_codex with arguments {"query":"<YOUR_TASK: return strict JSON>","directory":"/Users/dante/codex-mcp-bridge","format":"json","timeout":180,"sandbox":"read-only"}.
+Call mcp__codex-bridge__consult_codex with arguments {"query":"<YOUR_TASK: return strict JSON>","directory":"<project-root>","format":"json","timeout":180,"sandbox":"read-only"}.
 Return only the tool result without markdown fences.
 ```
 
 ### 템플릿 B: 구조화된 JSON 결과 (KR)
 
 ```text
-mcp__codex-bridge__consult_codex 도구를 다음 인자로 호출해줘: {"query":"<JSON으로 응답해야 하는 작업>","directory":"/Users/dante/codex-mcp-bridge","format":"json","timeout":180,"sandbox":"read-only"}.
+mcp__codex-bridge__consult_codex 도구를 다음 인자로 호출해줘: {"query":"<JSON으로 응답해야 하는 작업>","directory":"<project-root>","format":"json","timeout":180,"sandbox":"read-only"}.
 마크다운 코드블록 없이 도구 결과만 반환해줘.
 ```
 
 ### Template C: Large input via stdin block (EN)
 
 ```text
-Call mcp__codex-bridge__consult_codex_with_stdin with arguments {"stdin_content":"<LARGE_INPUT>","prompt":"<TASK_PROMPT>","directory":"/Users/dante/codex-mcp-bridge","format":"json","timeout":180,"sandbox":"read-only"}.
+Call mcp__codex-bridge__consult_codex_with_stdin with arguments {"stdin_content":"<LARGE_INPUT>","prompt":"<TASK_PROMPT>","directory":"<project-root>","format":"json","timeout":180,"sandbox":"read-only"}.
 Return only the tool result.
 ```
 
 ### 템플릿 C: 큰 입력 전달 (KR)
 
 ```text
-mcp__codex-bridge__consult_codex_with_stdin 도구를 다음 인자로 호출해줘: {"stdin_content":"<큰 입력 데이터>","prompt":"<작업 지시문>","directory":"/Users/dante/codex-mcp-bridge","format":"json","timeout":180,"sandbox":"read-only"}.
+mcp__codex-bridge__consult_codex_with_stdin 도구를 다음 인자로 호출해줘: {"stdin_content":"<큰 입력 데이터>","prompt":"<작업 지시문>","directory":"<project-root>","format":"json","timeout":180,"sandbox":"read-only"}.
 그리고 도구 결과만 반환해줘.
 ```
 
@@ -294,18 +297,18 @@ Precedence: tool input > environment variable > default.
 ## Test
 
 ```bash
-cd /Users/dante/codex-mcp-bridge
+cd <project-root>
 uv run pytest
 ```
 
 ## Smoke / Regression Scripts
 
 ```bash
-cd /Users/dante/codex-mcp-bridge
+cd <project-root>
 ./scripts/check_stdout_clean.sh
 ```
 
 ```bash
-cd /Users/dante/codex-mcp-bridge
+cd <project-root>
 ./scripts/it_smoke_codex_bridge.sh
 ```
