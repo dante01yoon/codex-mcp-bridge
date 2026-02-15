@@ -85,63 +85,115 @@ claude mcp add codex-bridge -- uv --directory <project-root> run codex-mcp-bridg
 claude mcp get codex-bridge
 ```
 
-## Sub-Agent Skills (Slash Commands)
+## Sub-Agent Skills
 
-Example skills are provided in `examples/claude-commands/`. These let you delegate tasks to Codex with a single slash command.
+Example skills are provided in two formats:
 
-### Available skills
+- **Skills** (`examples/claude-skills/`) — proper `.claude/skills/` format with YAML frontmatter. Supports `context: fork` (isolated subagent), `allowed-tools` restrictions, and progressive disclosure. **Recommended.**
+- **Custom Commands** (`examples/claude-commands/`) — legacy `.claude/commands/` format. Simpler but lacks skill features like forking and tool restrictions.
+
+### Available Skills
 
 #### Full sub-agent mode
 
 | Skill | Description | Sandbox |
 |---|---|---|
-| `/claude-codex-subagent` | **Comprehensive sub-agent** — auto-selects tool, sandbox, and format based on task. Supports multi-step delegation. | auto |
-
-Usage:
-```
-/claude-codex-subagent Review src/config.py, fix any issues, then generate tests
-/claude-codex-subagent Explain the MCP protocol flow, then add retry logic to runner.py
-/claude-codex-subagent What is the best caching strategy for this project?
-```
-
-This skill acts as an intelligent orchestrator: it analyzes the task, gathers context, delegates to Codex with the right parameters, validates the result, and applies changes. For complex tasks, it chains multiple Codex calls (analyze → plan → execute → verify).
+| `codex-subagent` | **Comprehensive orchestrator** — auto-selects tool, sandbox, and format based on task. Supports multi-step delegation. Runs in forked context. | auto |
 
 #### Read-only (analysis, no file changes)
 
 | Skill | Description | Sandbox |
 |---|---|---|
-| `/codex-review` | Code review — bugs, security, performance | `read-only` |
-| `/codex-test` | Generate tests for specified code | `read-only` |
-| `/codex-explain` | Explain code logic and design decisions | `read-only` |
-| `/codex-ask` | General technical question to Codex | `read-only` |
+| `codex-review` | Code review — bugs, security, performance | `read-only` |
+| `codex-test` | Generate tests for specified code | `read-only` |
+| `codex-explain` | Explain code logic and design decisions | `read-only` |
+| `codex-ask` | General technical question to Codex | `read-only` |
 
 #### Write-enabled (can modify/create files)
 
 | Skill | Description | Sandbox |
 |---|---|---|
-| `/codex-fix` | Fix bugs and issues in code | `workspace-write` |
-| `/codex-refactor` | Refactor code for readability and structure | `workspace-write` |
-| `/codex-generate` | Generate new code/files from description | `workspace-write` |
+| `codex-fix` | Fix bugs and issues in code | `workspace-write` |
+| `codex-refactor` | Refactor code for readability and structure | `workspace-write` |
+| `codex-generate` | Generate new code/files from description | `workspace-write` |
 
-### Install skills
+### Install Skills (Recommended)
 
-Copy the example skills to your project's `.claude/commands/` directory:
+Copy skill directories to your project's `.claude/skills/`:
 
 ```bash
 # From cloned repo
+cp -r <project-root>/examples/claude-skills/* .claude/skills/
+
+# Or download a single skill from GitHub
+mkdir -p .claude/skills/codex-subagent
+curl -sL "https://raw.githubusercontent.com/dante01yoon/codex-mcp-bridge/main/examples/claude-skills/codex-subagent/SKILL.md" \
+  -o ".claude/skills/codex-subagent/SKILL.md"
+```
+
+Each skill is a directory with a `SKILL.md` file:
+
+```
+.claude/skills/
+├── codex-subagent/
+│   └── SKILL.md          # Full orchestrator with fork context
+├── codex-review/
+│   └── SKILL.md          # Code review (read-only)
+├── codex-fix/
+│   └── SKILL.md          # Bug fix (workspace-write)
+├── codex-generate/
+│   └── SKILL.md          # Code generation (workspace-write)
+├── codex-test/
+│   └── SKILL.md          # Test generation (read-only)
+├── codex-explain/
+│   └── SKILL.md          # Code explanation (read-only)
+├── codex-ask/
+│   └── SKILL.md          # Question delegation (read-only)
+└── codex-refactor/
+    └── SKILL.md          # Refactoring (workspace-write)
+```
+
+### SKILL.md Format
+
+Each skill uses YAML frontmatter for metadata:
+
+```yaml
+---
+name: Codex Sub-Agent
+description: Orchestrates task delegation to Codex via MCP bridge.
+user-invocable: true
+allowed-tools:
+  - mcp__codex-bridge__consult_codex
+  - mcp__codex-bridge__consult_codex_with_stdin
+  - Read
+  - Glob
+  - Grep
+context: fork
+argument-hint: Describe the task to delegate to Codex
+---
+
+(Skill instructions here...)
+```
+
+Key frontmatter fields:
+- `user-invocable: true` — enables `/skill-name` slash command
+- `allowed-tools` — restricts which tools the skill can use
+- `context: fork` — runs skill in an isolated subagent (prevents context pollution)
+- `argument-hint` — hint text shown when user types the slash command
+
+### Install Custom Commands (Legacy)
+
+If you prefer the simpler legacy format:
+
+```bash
 mkdir -p .claude/commands
 cp <project-root>/examples/claude-commands/*.md .claude/commands/
-
-# Or download directly from GitHub
-mkdir -p .claude/commands
-for cmd in claude-codex-subagent codex-review codex-test codex-explain codex-ask codex-fix codex-refactor codex-generate; do
-  curl -sL "https://raw.githubusercontent.com/dante01yoon/codex-mcp-bridge/main/examples/claude-commands/${cmd}.md" -o ".claude/commands/${cmd}.md"
-done
 ```
 
-### Basic usage
+### Basic Usage
 
 ```
+/codex-subagent Review src/config.py, fix any issues, then generate tests
 /codex-review src/server.py
 /codex-test src/runner.py
 /codex-explain src/config.py
@@ -151,71 +203,49 @@ done
 /codex-generate "Create a health check endpoint that returns server status and uptime"
 ```
 
-### Workflow examples
+### Workflow Examples
 
 #### Workflow 1: Review → Fix
 
-Find issues first, then fix them:
-
 ```
-User: /codex-review src/runner.py
+/codex-review src/runner.py
+  → "3 issues found: [critical] timeout not handled when value is 0..."
 
-  → Codex returns: "3 issues found:
-     1. [critical] subprocess timeout not handled when value is 0
-     2. [warning] stderr truncation may lose important error context
-     3. [info] magic number 2000 should be a named constant"
-
-User: /codex-fix src/runner.py "subprocess timeout not handled when value is 0"
-
+/codex-fix src/runner.py "subprocess timeout not handled when value is 0"
   → Codex fixes the issue and applies changes
 ```
 
 #### Workflow 2: Generate → Test → Review
 
-Build new code and validate it:
-
 ```
-User: /codex-generate "Add a validate_schema function that checks tool input against JSON Schema"
-
+/codex-generate "Add a validate_schema function that checks tool input against JSON Schema"
   → Codex generates src/codex_bridge_mcp/validator.py
 
-User: /codex-test src/codex_bridge_mcp/validator.py
-
+/codex-test src/codex_bridge_mcp/validator.py
   → Codex generates tests/test_validator.py
 
-User: /codex-review src/codex_bridge_mcp/validator.py
-
-  → Codex reviews the generated code for bugs and improvements
+/codex-review src/codex_bridge_mcp/validator.py
+  → Codex reviews the generated code for improvements
 ```
 
 #### Workflow 3: Explain → Refactor
 
-Understand before changing:
-
 ```
-User: /codex-explain src/codex_bridge_mcp/config.py
+/codex-explain src/codex_bridge_mcp/config.py
+  → "Settings class loads config with precedence: tool > env > file > defaults..."
 
-  → Codex explains: "Settings class loads config with precedence:
-     tool input > env var > JSON file > defaults. The _find_config_file
-     function searches cwd then ~/.config/codex-bridge/..."
-
-User: /codex-refactor src/codex_bridge_mcp/config.py
-
+/codex-refactor src/codex_bridge_mcp/config.py
   → Codex refactors with understanding of the design intent preserved
 ```
 
-#### Workflow 4: Ask → Generate
-
-Research then build:
+#### Workflow 4: Multi-Step via Sub-Agent
 
 ```
-User: /codex-ask "What is the best way to implement retry logic for subprocess.run with exponential backoff?"
-
-  → Codex returns explanation with code pattern
-
-User: /codex-generate "Add retry logic with exponential backoff to the run_codex function in runner.py"
-
-  → Codex generates the implementation
+/codex-subagent Analyze the error handling in runner.py, plan improvements, implement them, then verify
+  → Step 1: Codex analyzes (read-only)
+  → Step 2: Codex plans improvements (read-only)
+  → Step 3: Codex applies changes (workspace-write)
+  → Step 4: Codex verifies result (read-only)
 ```
 
 ### Auto-delegation via CLAUDE.md

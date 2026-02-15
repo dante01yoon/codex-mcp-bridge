@@ -1,6 +1,8 @@
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from codex_bridge_mcp.config import Settings
 from codex_bridge_mcp.runner import CodexRequest, run_codex
 from codex_bridge_mcp.types import OutputFormat, SandboxMode
@@ -134,3 +136,108 @@ def test_run_codex_request_values_override_settings(monkeypatch) -> None:
     assert captured["cmd"][model_index] == "request-model"
     sandbox_index = captured["cmd"].index("--sandbox") + 1
     assert captured["cmd"][sandbox_index] == SandboxMode.WORKSPACE_WRITE.value
+
+
+# --- Missing tests generated via Codex bridge ---
+
+
+def test_build_query_hints_for_all_formats() -> None:
+    from codex_bridge_mcp.runner import _build_query
+
+    q = "do work"
+
+    json_query = _build_query(q, OutputFormat.JSON)
+    code_query = _build_query(q, OutputFormat.CODE)
+    text_query = _build_query(q, OutputFormat.TEXT)
+
+    assert json_query.startswith("Return only valid JSON with no markdown fences or explanation.")
+    assert code_query.startswith("Return only code output. Avoid commentary unless absolutely necessary.")
+    assert text_query.startswith("Return a concise plain-text answer.")
+    assert json_query.endswith(f"TASK:\n{q}")
+    assert code_query.endswith(f"TASK:\n{q}")
+    assert text_query.endswith(f"TASK:\n{q}")
+
+
+def test_stderr_excerpt_short_unchanged() -> None:
+    from codex_bridge_mcp.runner import _stderr_excerpt
+
+    assert _stderr_excerpt("short stderr") == "short stderr"
+
+
+def test_stderr_excerpt_empty_and_none() -> None:
+    from codex_bridge_mcp.runner import _stderr_excerpt
+
+    assert _stderr_excerpt("") == ""
+    assert _stderr_excerpt(None) == ""
+
+
+def test_auth_hint_detects_markers() -> None:
+    from codex_bridge_mcp.runner import _auth_hint
+
+    assert _auth_hint("Please LOGIN first.")
+    assert _auth_hint("Need to authenticate again.")
+    assert _auth_hint("Auth token missing.")
+    assert _auth_hint("Credential store unavailable.")
+    assert _auth_hint("User is not logged in.")
+
+
+def test_auth_hint_returns_false_without_markers() -> None:
+    from codex_bridge_mcp.runner import _auth_hint
+
+    assert _auth_hint("network timeout while contacting service") is False
+
+
+def test_codex_request_rejects_empty_query() -> None:
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        CodexRequest(query="   ")
+
+
+def test_codex_request_rejects_extra_fields() -> None:
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        CodexRequest(query="ok", unexpected="value")
+
+
+def test_codex_request_strips_whitespace() -> None:
+    req = CodexRequest(query="  hello  ", directory="  ./subdir  ")
+    assert req.query == "hello"
+    assert req.directory == "./subdir"
+
+
+def test_run_codex_directory_resolution_error(monkeypatch) -> None:
+    import codex_bridge_mcp.runner as runner
+
+    monkeypatch.setattr(runner.shutil, "which", lambda _: "/usr/bin/codex")
+
+    def _raise(*args, **kwargs):
+        raise ValueError("bad directory")
+
+    monkeypatch.setattr(runner, "resolve_directory", _raise)
+
+    result = runner.run_codex(runner.CodexRequest(query="test"), Settings())
+    assert result == "Error: bad directory"
+
+
+def test_run_codex_truncates_output(monkeypatch, tmp_path: Path) -> None:
+    from types import SimpleNamespace
+    import codex_bridge_mcp.runner as runner
+
+    monkeypatch.setattr(runner.shutil, "which", lambda _: "/usr/bin/codex")
+    monkeypatch.setattr(runner, "resolve_directory", lambda *args, **kwargs: tmp_path)
+
+    long_output = "x" * 600
+
+    def fake_run(cmd, **kwargs):
+        out_path = cmd[cmd.index("--output-last-message") + 1]
+        Path(out_path).write_text(long_output, encoding="utf-8")
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(runner.subprocess, "run", fake_run)
+
+    settings = Settings(max_output_chars=512)
+    result = runner.run_codex(runner.CodexRequest(query="test"), settings)
+
+    assert result == ("x" * 512) + "\n...(truncated)"

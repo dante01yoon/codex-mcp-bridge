@@ -137,3 +137,72 @@ def test_resolve_directory_allowlist_accepts_and_rejects(tmp_path: Path) -> None
 
     with pytest.raises(ValueError, match="outside CODEX_ALLOWED_DIRS"):
         resolve_directory(str(denied), settings, base_dir=tmp_path)
+
+
+# --- Missing tests generated via Codex bridge ---
+
+
+def test_read_int_env_clamps_below_minimum(monkeypatch) -> None:
+    from codex_bridge_mcp.config import _read_int_env
+
+    monkeypatch.setenv("CODEX_TEST_INT", "0")
+    assert _read_int_env("CODEX_TEST_INT", default=90, minimum=5) == 5
+
+
+def test_parse_allowed_dirs_empty_and_multiple_with_spaces(tmp_path: Path) -> None:
+    from codex_bridge_mcp.config import _parse_allowed_dirs
+
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    first.mkdir()
+    second.mkdir()
+
+    assert _parse_allowed_dirs("") == []
+    raw = f"  {first}  ,   {second}   "
+    assert _parse_allowed_dirs(raw) == [first.resolve(), second.resolve()]
+
+
+def test_load_json_config_malformed_returns_empty_dict(tmp_path: Path) -> None:
+    from codex_bridge_mcp.config import _load_json_config
+
+    bad = tmp_path / "bad.json"
+    bad.write_text("{not-valid-json", encoding="utf-8")
+
+    assert _load_json_config(bad) == {}
+
+
+def test_load_json_config_non_dict_returns_empty_dict(tmp_path: Path) -> None:
+    from codex_bridge_mcp.config import _load_json_config
+
+    arr = tmp_path / "array.json"
+    arr.write_text('["a", "b"]', encoding="utf-8")
+
+    assert _load_json_config(arr) == {}
+
+
+def test_resolve_directory_rejects_nonexistent_directory(tmp_path: Path) -> None:
+    settings = Settings()
+    with pytest.raises(ValueError, match="Directory does not exist"):
+        resolve_directory("does-not-exist", settings, base_dir=tmp_path)
+
+
+def test_truncate_output_empty_string() -> None:
+    assert truncate_output("", 100) == ""
+
+
+def test_settings_load_non_list_allowed_dirs_in_json(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.chdir(tmp_path)
+    for key in (
+        "CODEX_DEFAULT_MODEL",
+        "CODEX_DEFAULT_TIMEOUT",
+        "CODEX_DEFAULT_SANDBOX",
+        "CODEX_ALLOWED_DIRS",
+        "CODEX_MAX_OUTPUT_CHARS",
+    ):
+        monkeypatch.delenv(key, raising=False)
+
+    config_file = tmp_path / "codex-bridge.json"
+    config_file.write_text('{"allowed_dirs": "/tmp/not-a-list"}', encoding="utf-8")
+
+    settings = Settings.load()
+    assert settings.allowed_dirs == []
