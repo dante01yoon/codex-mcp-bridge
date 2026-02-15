@@ -1,5 +1,9 @@
 # Codex MCP Bridge Lite
 
+[![PyPI version](https://img.shields.io/pypi/v/codex-mcp-bridge)](https://pypi.org/project/codex-mcp-bridge/)
+[![Python](https://img.shields.io/pypi/pyversions/codex-mcp-bridge)](https://pypi.org/project/codex-mcp-bridge/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 A local stdio MCP server that exposes two tools for Claude CLI and executes `codex exec` non-interactively.
 
 - `consult_codex`
@@ -25,6 +29,20 @@ Placeholder convention used in this README:
 
 ## Install
 
+### From PyPI (recommended)
+
+```bash
+pip install codex-mcp-bridge
+```
+
+Or with uv:
+
+```bash
+uv pip install codex-mcp-bridge
+```
+
+### From source (development)
+
 ```bash
 cd <project-root>
 uv venv
@@ -34,15 +52,37 @@ uv pip install -e .[dev]
 
 ## Run (stdio MCP)
 
+After installing from PyPI:
+
+```bash
+codex-mcp-bridge
+```
+
+Or from source:
+
 ```bash
 cd <project-root>
 uv run codex-mcp-bridge
 ```
 
-## Claude CLI registration example
+## Claude CLI registration
+
+### After pip install (recommended)
+
+```bash
+claude mcp add codex-bridge -- codex-mcp-bridge
+```
+
+### From source
 
 ```bash
 claude mcp add codex-bridge -- uv --directory <project-root> run codex-mcp-bridge
+```
+
+### Verify registration
+
+```bash
+claude mcp get codex-bridge
 ```
 
 ## Default Launcher Command (Recommended)
@@ -101,17 +141,26 @@ Korean quick note:
 
 ## Quick Guide (EN)
 
-1. Install dependencies and run the bridge server:
+1. Install and run:
+```bash
+pip install codex-mcp-bridge
+codex-mcp-bridge
+```
+
+Or from source:
 ```bash
 cd <project-root>
-uv venv
-source .venv/bin/activate
+uv venv && source .venv/bin/activate
 uv pip install -e .[dev]
 uv run codex-mcp-bridge
 ```
 
 2. Register MCP server in Claude CLI:
 ```bash
+# After pip install
+claude mcp add codex-bridge -- codex-mcp-bridge
+
+# Or from source
 claude mcp add codex-bridge -- uv --directory <project-root> run codex-mcp-bridge
 ```
 
@@ -139,17 +188,26 @@ claude -p --output-format text --permission-mode dontAsk --allowedTools mcp__cod
 
 ## 빠른 가이드 (KR)
 
-1. 의존성 설치 및 브리지 서버 실행:
+1. 설치 및 실행:
+```bash
+pip install codex-mcp-bridge
+codex-mcp-bridge
+```
+
+또는 소스에서:
 ```bash
 cd <project-root>
-uv venv
-source .venv/bin/activate
+uv venv && source .venv/bin/activate
 uv pip install -e .[dev]
 uv run codex-mcp-bridge
 ```
 
 2. Claude CLI에 MCP 서버 등록:
 ```bash
+# pip 설치 후
+claude mcp add codex-bridge -- codex-mcp-bridge
+
+# 또는 소스에서
 claude mcp add codex-bridge -- uv --directory <project-root> run codex-mcp-bridge
 ```
 

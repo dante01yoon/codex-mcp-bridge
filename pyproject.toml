@@ -4,6 +4,23 @@ version = "0.1.0"
 description = "Lightweight stdio MCP server that bridges Claude CLI tools to codex exec"
 readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
+authors = [
+  { name = "dante" },
+]
+keywords = ["mcp", "codex", "claude", "ai", "agent", "bridge", "cli"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
   "mcp>=1.2.0",
   "pydantic>=2.7.0",
@@ -13,6 +30,11 @@ dependencies = [
 dev = [
   "pytest>=8.0.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/dante01yoon/codex-mcp-bridge"
+Repository = "https://github.com/dante01yoon/codex-mcp-bridge"
+Issues = "https://github.com/dante01yoon/codex-mcp-bridge/issues"
 
 [project.scripts]
 codex-mcp-bridge = "codex_bridge_mcp.server:main"
