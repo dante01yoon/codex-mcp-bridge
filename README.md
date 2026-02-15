@@ -85,6 +85,134 @@ claude mcp add codex-bridge -- uv --directory <project-root> run codex-mcp-bridg
 claude mcp get codex-bridge
 ```
 
+## Sub-Agent Skills (Slash Commands)
+
+Example skills are provided in `examples/claude-commands/`. These let you delegate tasks to Codex with a single slash command.
+
+### Available skills
+
+#### Read-only (analysis, no file changes)
+
+| Skill | Description | Sandbox |
+|---|---|---|
+| `/codex-review` | Code review — bugs, security, performance | `read-only` |
+| `/codex-test` | Generate tests for specified code | `read-only` |
+| `/codex-explain` | Explain code logic and design decisions | `read-only` |
+| `/codex-ask` | General technical question to Codex | `read-only` |
+
+#### Write-enabled (can modify/create files)
+
+| Skill | Description | Sandbox |
+|---|---|---|
+| `/codex-fix` | Fix bugs and issues in code | `workspace-write` |
+| `/codex-refactor` | Refactor code for readability and structure | `workspace-write` |
+| `/codex-generate` | Generate new code/files from description | `workspace-write` |
+
+### Install skills
+
+Copy the example skills to your project's `.claude/commands/` directory:
+
+```bash
+# From cloned repo
+mkdir -p .claude/commands
+cp <project-root>/examples/claude-commands/*.md .claude/commands/
+
+# Or download directly from GitHub
+mkdir -p .claude/commands
+for cmd in codex-review codex-test codex-explain codex-ask codex-fix codex-refactor codex-generate; do
+  curl -sL "https://raw.githubusercontent.com/dante01yoon/codex-mcp-bridge/main/examples/claude-commands/${cmd}.md" -o ".claude/commands/${cmd}.md"
+done
+```
+
+### Basic usage
+
+```
+/codex-review src/server.py
+/codex-test src/runner.py
+/codex-explain src/config.py
+/codex-ask "How does MCP stdio transport work?"
+/codex-fix src/runner.py "timeout is not applied when value is 0"
+/codex-refactor src/config.py
+/codex-generate "Create a health check endpoint that returns server status and uptime"
+```
+
+### Workflow examples
+
+#### Workflow 1: Review → Fix
+
+Find issues first, then fix them:
+
+```
+User: /codex-review src/runner.py
+
+  → Codex returns: "3 issues found:
+     1. [critical] subprocess timeout not handled when value is 0
+     2. [warning] stderr truncation may lose important error context
+     3. [info] magic number 2000 should be a named constant"
+
+User: /codex-fix src/runner.py "subprocess timeout not handled when value is 0"
+
+  → Codex fixes the issue and applies changes
+```
+
+#### Workflow 2: Generate → Test → Review
+
+Build new code and validate it:
+
+```
+User: /codex-generate "Add a validate_schema function that checks tool input against JSON Schema"
+
+  → Codex generates src/codex_bridge_mcp/validator.py
+
+User: /codex-test src/codex_bridge_mcp/validator.py
+
+  → Codex generates tests/test_validator.py
+
+User: /codex-review src/codex_bridge_mcp/validator.py
+
+  → Codex reviews the generated code for bugs and improvements
+```
+
+#### Workflow 3: Explain → Refactor
+
+Understand before changing:
+
+```
+User: /codex-explain src/codex_bridge_mcp/config.py
+
+  → Codex explains: "Settings class loads config with precedence:
+     tool input > env var > JSON file > defaults. The _find_config_file
+     function searches cwd then ~/.config/codex-bridge/..."
+
+User: /codex-refactor src/codex_bridge_mcp/config.py
+
+  → Codex refactors with understanding of the design intent preserved
+```
+
+#### Workflow 4: Ask → Generate
+
+Research then build:
+
+```
+User: /codex-ask "What is the best way to implement retry logic for subprocess.run with exponential backoff?"
+
+  → Codex returns explanation with code pattern
+
+User: /codex-generate "Add retry logic with exponential backoff to the run_codex function in runner.py"
+
+  → Codex generates the implementation
+```
+
+### Auto-delegation via CLAUDE.md
+
+To make Claude automatically prefer Codex for coding tasks (without explicit slash commands), add the provided snippet to your project's `CLAUDE.md`:
+
+```bash
+cat <project-root>/examples/CLAUDE.md.example >> CLAUDE.md
+```
+
+This makes Claude delegate code review, test generation, and technical questions to Codex by default. See `examples/CLAUDE.md.example` for the full configuration.
+
 ## Default Launcher Command (Recommended)
 
 Use this launcher to make Claude prefer `codex-bridge` automatically for coding tasks, without writing explicit templates each time.
@@ -325,7 +453,31 @@ sequenceDiagram
 - Codex 결과는 `--output-last-message` 파일에서 우선 읽고, 파일 읽기 실패 시 캡처된 stdout으로 대체합니다.
 - 보안/안정성은 기본 `read-only` sandbox, 디렉터리 allowlist, timeout, stderr 절단, output truncation으로 보장합니다.
 
-## Environment variables
+## Configuration
+
+Settings can be configured via a **JSON file**, **environment variables**, or both.
+
+Precedence: **tool input > environment variable > config file > default**.
+
+### JSON config file
+
+Place `codex-bridge.json` (or `.codex-bridge.json`) in your project root or `~/.config/codex-bridge/`:
+
+```json
+{
+  "default_timeout": 180,
+  "default_sandbox": "read-only",
+  "default_model": null,
+  "allowed_dirs": [],
+  "max_output_chars": 12000
+}
+```
+
+An example is provided in `examples/codex-bridge.json`.
+
+### Environment variables
+
+Environment variables override JSON config values:
 
 - `CODEX_DEFAULT_MODEL` (optional)
 - `CODEX_DEFAULT_TIMEOUT` (default: `90`)
@@ -333,7 +485,11 @@ sequenceDiagram
 - `CODEX_ALLOWED_DIRS` (optional CSV absolute/relative dirs)
 - `CODEX_MAX_OUTPUT_CHARS` (default: `12000`)
 
-Precedence: tool input > environment variable > default.
+Environment variables can also be set at MCP registration time:
+
+```bash
+claude mcp add -e CODEX_DEFAULT_TIMEOUT=180 codex-bridge -- codex-mcp-bridge
+```
 
 ## Tool Inputs
 

@@ -1,0 +1,7 @@
+{
+  "default_timeout": 180,
+  "default_sandbox": "read-only",
+  "default_model": null,
+  "allowed_dirs": [],
+  "max_output_chars": 12000
+}

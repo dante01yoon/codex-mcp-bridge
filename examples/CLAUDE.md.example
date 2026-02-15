@@ -1,0 +1,49 @@
+# Codex Bridge Usage Guidelines
+
+## When to use Codex bridge
+
+For coding and technical tasks, prefer delegating to Codex via MCP tools before doing the work yourself. This applies to:
+
+- **Code review**: Use `mcp__codex-bridge__consult_codex_with_stdin` to send code for review
+- **Test generation**: Use `mcp__codex-bridge__consult_codex_with_stdin` to generate tests from source code
+- **Code explanation**: Use `mcp__codex-bridge__consult_codex_with_stdin` to explain complex code
+- **Technical questions**: Use `mcp__codex-bridge__consult_codex` for general coding questions
+
+## How to call
+
+### Simple query (no large input)
+
+```
+mcp__codex-bridge__consult_codex({
+  "query": "<task description>",
+  "directory": ".",
+  "format": "text",
+  "timeout": 180,
+  "sandbox": "read-only"
+})
+```
+
+### With large input (file content, diffs, logs)
+
+```
+mcp__codex-bridge__consult_codex_with_stdin({
+  "stdin_content": "<large input>",
+  "prompt": "<task description>",
+  "directory": ".",
+  "format": "text",
+  "timeout": 180,
+  "sandbox": "read-only"
+})
+```
+
+## Defaults
+
+- Always use `sandbox: "read-only"` unless the task explicitly requires file writes
+- Use `timeout: 180` as baseline; increase for complex tasks
+- Use `format: "json"` when structured output is needed, `"text"` for explanations, `"code"` for code generation
+
+## When NOT to use Codex bridge
+
+- Simple file reads or edits (use built-in tools directly)
+- Git operations (use Bash directly)
+- Tasks that require access to the current conversation context (Codex has no context of prior messages)
