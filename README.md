@@ -498,6 +498,28 @@ sequenceDiagram
 - Codex 결과는 `--output-last-message` 파일에서 우선 읽고, 파일 읽기 실패 시 캡처된 stdout으로 대체합니다.
 - 보안/안정성은 기본 `read-only` sandbox, 디렉터리 allowlist, timeout, stderr 절단, output truncation으로 보장합니다.
 
+### About temporary output file (`--output-last-message`)
+
+- 브리지는 요청마다 OS 임시 디렉터리에 1회성 파일을 생성합니다.
+- Codex의 마지막 답변을 그 파일에서 먼저 읽습니다.
+- 처리 후에는 파일을 삭제합니다 (`output_file.unlink(missing_ok=True)` in `src/codex_bridge_mcp/runner.py`).
+- 즉, 정상 흐름에서는 파일이 남지 않습니다.
+
+### Why file-first is useful (real examples)
+
+현재 버전에서는 보통 최종 답변이 stdout에 깔끔히 나오지만, 운영 환경에서는 아래와 같은 변화가 생길 수 있습니다.
+
+1. CLI 옵션/모드 변경으로 stdout 포맷이 달라지는 경우
+: 예를 들어 `--json` 같은 이벤트 출력 모드가 활성화되면 stdout이 JSONL 이벤트 스트림이 될 수 있습니다. 이때 문자열 파싱 기반 브리지는 쉽게 깨질 수 있습니다.
+
+2. 향후 Codex CLI 릴리즈에서 stdout에 상태 메시지가 추가되는 경우
+: 배너/진행상태/요약 정보가 stdout으로 섞이면 "최종 답변만 반환" 계약이 깨질 수 있습니다.
+
+3. 실행 래퍼/셸 훅이 stdout에 텍스트를 주입하는 경우
+: 내부 정책상 표준출력에 prefix/suffix를 붙이는 wrapper를 쓰는 환경에서는 출력 오염 가능성이 있습니다.
+
+파일 우선 전략은 이런 변화와 무관하게 "최종 답변 소스"를 고정해 주기 때문에, 브리지의 안정성과 파싱 신뢰성을 높입니다.
+
 ## Configuration
 
 Settings can be configured via a **JSON file**, **environment variables**, or both.
