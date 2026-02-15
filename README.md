@@ -91,6 +91,21 @@ Example skills are provided in `examples/claude-commands/`. These let you delega
 
 ### Available skills
 
+#### Full sub-agent mode
+
+| Skill | Description | Sandbox |
+|---|---|---|
+| `/claude-codex-subagent` | **Comprehensive sub-agent** — auto-selects tool, sandbox, and format based on task. Supports multi-step delegation. | auto |
+
+Usage:
+```
+/claude-codex-subagent Review src/config.py, fix any issues, then generate tests
+/claude-codex-subagent Explain the MCP protocol flow, then add retry logic to runner.py
+/claude-codex-subagent What is the best caching strategy for this project?
+```
+
+This skill acts as an intelligent orchestrator: it analyzes the task, gathers context, delegates to Codex with the right parameters, validates the result, and applies changes. For complex tasks, it chains multiple Codex calls (analyze → plan → execute → verify).
+
 #### Read-only (analysis, no file changes)
 
 | Skill | Description | Sandbox |
@@ -119,7 +134,7 @@ cp <project-root>/examples/claude-commands/*.md .claude/commands/
 
 # Or download directly from GitHub
 mkdir -p .claude/commands
-for cmd in codex-review codex-test codex-explain codex-ask codex-fix codex-refactor codex-generate; do
+for cmd in claude-codex-subagent codex-review codex-test codex-explain codex-ask codex-fix codex-refactor codex-generate; do
   curl -sL "https://raw.githubusercontent.com/dante01yoon/codex-mcp-bridge/main/examples/claude-commands/${cmd}.md" -o ".claude/commands/${cmd}.md"
 done
 ```
