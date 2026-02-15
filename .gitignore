@@ -7,3 +7,5 @@ build/
 *.egg-info/
 src/*.egg-info/
 .claude/
+docs/*
+!docs/claude-codex-subagent-qa.md
